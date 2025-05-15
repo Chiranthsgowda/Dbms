@@ -757,3 +757,229 @@ class CollegeEventTracker:
             limit = 10
         
         events = self.reports_module
+
+    def show_events_by_participation(self):
+        """Show events by participation count"""
+        print("\nEVENTS BY PARTICIPATION")
+        print("======================")
+        
+        limit = input("Number of events to show (default: 10): ").strip()
+        
+        try:
+            limit = int(limit) if limit else 10
+        except ValueError:
+            print("Using default value: 10")
+            limit = 10
+        
+        events = self.reports_module.get_events_by_participation(limit)
+        
+        if not events:
+            print("No event participation data found.")
+            return
+        
+        print(f"\nTop {len(events)} Events by Participation:")
+        print(f"{'Rank':<5} {'ID':<5} {'Event Name':<30} {'Type':<15} {'Department':<20} {'Participants':<12}")
+        print("-" * 90)
+        
+        for i, event in enumerate(events, 1):
+            print(f"{i:<5} {event['event_id']:<5} {event['name']:<30} {event['event_type']:<15} {event['department']:<20} {event['participant_count']:<12}")
+    
+    def show_performance_summary(self):
+        """Show performance summary"""
+        print("\nPERFORMANCE SUMMARY")
+        print("==================")
+        
+        summary = self.reports_module.get_performance_summary()
+        
+        if not summary:
+            print("No performance data found.")
+            return
+        
+        print(f"{'Performance':<12} {'Count':<8} {'Percentage':<12}")
+        print("-" * 35)
+        
+        total = sum(item['count'] for item in summary)
+        
+        for item in summary:
+            percentage = (item['count'] / total * 100) if total > 0 else 0
+            print(f"{item['performance']:<12} {item['count']:<8} {percentage:.2f}%")
+    
+    def show_event_type_statistics(self):
+        """Show statistics by event type"""
+        print("\nEVENT TYPE STATISTICS")
+        print("====================")
+        
+        stats = self.reports_module.get_event_type_statistics()
+        
+        if not stats:
+            print("No event type statistics found.")
+            return
+        
+        print(f"{'Event Type':<20} {'Total Events':<15} {'Total Participants':<20} {'Avg/Event':<12}")
+        print("-" * 70)
+        
+        for stat in stats:
+            avg = stat['total_participants'] / stat['total_events'] if stat['total_events'] > 0 else 0
+            print(f"{stat['event_type']:<20} {stat['total_events']:<15} {stat['total_participants']:<20} {avg:.2f}")
+    
+    def show_monthly_summary(self):
+        """Show monthly event summary"""
+        print("\nMONTHLY EVENT SUMMARY")
+        print("====================")
+        
+        year = input("Enter year to analyze (default: current year): ").strip()
+        
+        if not year:
+            year = datetime.now().year
+        else:
+            try:
+                year = int(year)
+            except ValueError:
+                print(f"Invalid year. Using current year: {datetime.now().year}")
+                year = datetime.now().year
+        
+        summary = self.reports_module.get_monthly_summary(year)
+        
+        if not summary:
+            print(f"No event data found for year {year}.")
+            return
+        
+        print(f"\nMonthly Event Summary for {year}:")
+        print(f"{'Month':<10} {'Events':<8} {'Participants':<15} {'Winners':<10} {'Runners-up':<12}")
+        print("-" * 60)
+        
+        months = ['January', 'February', 'March', 'April', 'May', 'June', 
+                  'July', 'August', 'September', 'October', 'November', 'December']
+        
+        for item in summary:
+            month_name = months[item['month']-1]
+            print(f"{month_name:<10} {item['event_count']:<8} {item['participant_count']:<15} {item['winner_count']:<10} {item['runner_up_count']:<12}")
+    
+    def show_top_performers(self):
+        """Show top performers (winners and runners-up)"""
+        print("\nTOP PERFORMERS")
+        print("=============")
+        
+        limit = input("Number of students to show (default: 10): ").strip()
+        
+        try:
+            limit = int(limit) if limit else 10
+        except ValueError:
+            print("Using default value: 10")
+            limit = 10
+        
+        performers = self.reports_module.get_top_performers(limit)
+        
+        if not performers:
+            print("No performance data found.")
+            return
+        
+        print(f"\nTop {len(performers)} Performers:")
+        print(f"{'Rank':<5} {'USN':<12} {'Name':<25} {'Department':<20} {'Wins':<6} {'Runner-ups':<12} {'Total':<6}")
+        print("-" * 90)
+        
+        for i, performer in enumerate(performers, 1):
+            total = performer['winner_count'] + performer['runner_up_count']
+            print(f"{i:<5} {performer['usn']:<12} {performer['name']:<25} {performer['department']:<20} {performer['winner_count']:<6} {performer['runner_up_count']:<12} {total:<6}")
+    
+    def generate_comprehensive_report(self):
+        """Generate a comprehensive report"""
+        print("\nGENERATE COMPREHENSIVE REPORT")
+        print("============================")
+        
+        # Ask for basic report parameters
+        print("\nReport Parameters:")
+        year = input("Year (leave blank for all years): ").strip()
+        department = input("Department (leave blank for all departments): ").strip()
+        event_type = input("Event Type (leave blank for all types): ").strip()
+        
+        # Convert year to integer if provided
+        if year:
+            try:
+                year = int(year)
+            except ValueError:
+                print("Invalid year format. Using all years.")
+                year = None
+        else:
+            year = None
+        
+        report = self.reports_module.generate_comprehensive_report(year, department, event_type)
+        
+        if not report:
+            print("No data available for the specified filters.")
+            return
+        
+        # Display report header
+        print("\n" + "=" * 80)
+        print("                   COLLEGE EVENT PARTICIPATION REPORT")
+        print("=" * 80)
+        
+        # Display filter information
+        print("\nReport Filters:")
+        print(f"Year: {year if year else 'All Years'}")
+        print(f"Department: {department if department else 'All Departments'}")
+        print(f"Event Type: {event_type if event_type else 'All Event Types'}")
+        print("\n" + "-" * 80)
+        
+        # Summary statistics
+        print("\nSUMMARY STATISTICS:")
+        print(f"Total Students: {report['summary']['total_students']}")
+        print(f"Total Events: {report['summary']['total_events']}")
+        print(f"Total Participations: {report['summary']['total_participations']}")
+        print(f"Average Participations per Student: {report['summary']['avg_participations_per_student']:.2f}")
+        print(f"Average Participants per Event: {report['summary']['avg_participants_per_event']:.2f}")
+        
+        # Department statistics
+        print("\nDEPARTMENT STATISTICS:")
+        print(f"{'Department':<20} {'Students':<10} {'Participations':<15} {'Avg/Student':<12}")
+        print("-" * 60)
+        
+        for dept in report['departments']:
+            print(f"{dept['department']:<20} {dept['student_count']:<10} {dept['participation_count']:<15} {dept['avg_participations']:<12}")
+        
+        # Event type statistics
+        print("\nEVENT TYPE STATISTICS:")
+        print(f"{'Event Type':<20} {'Events':<8} {'Participations':<15} {'Avg/Event':<12}")
+        print("-" * 60)
+        
+        for event_type in report['event_types']:
+            print(f"{event_type['type']:<20} {event_type['event_count']:<8} {event_type['participation_count']:<15} {event_type['avg_participations']:<12}")
+        
+        # Top performing students
+        print("\nTOP PERFORMING STUDENTS:")
+        print(f"{'USN':<12} {'Name':<25} {'Department':<20} {'Wins':<6} {'Runner-ups':<12}")
+        print("-" * 80)
+        
+        for student in report['top_performers'][:10]:  # Show top 10
+            print(f"{student['usn']:<12} {student['name']:<25} {student['department']:<20} {student['winner_count']:<6} {student['runner_up_count']:<12}")
+        
+        # Most popular events
+        print("\nMOST POPULAR EVENTS:")
+        print(f"{'Event Name':<30} {'Type':<15} {'Department':<20} {'Participants':<12}")
+        print("-" * 80)
+        
+        for event in report['popular_events'][:10]:  # Show top 10
+            print(f"{event['name']:<30} {event['event_type']:<15} {event['department']:<20} {event['participant_count']:<12}")
+        
+        print("\n" + "=" * 80)
+        print("Report generated on:", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+        print("=" * 80)
+    
+    def quit_application(self):
+        """Exit the application"""
+        print("\nThank you for using College Event Participation Tracker!")
+        print("Exiting...")
+        sys.exit(0)
+
+
+if __name__ == "__main__":
+    try:
+        # Initialize the application
+        app = CollegeEventTracker()
+        app.run()
+    except KeyboardInterrupt:
+        print("\n\nProgram terminated by user.")
+        sys.exit(0)
+    except Exception as e:
+        print(f"\nAn unexpected error occurred: {e}")
+        sys.exit(1)
